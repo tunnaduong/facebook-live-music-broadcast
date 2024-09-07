@@ -239,21 +239,31 @@ function App() {
         <div className="live-cmt">Đang phát:</div>
         <div className="now-playing">
           <Marquee autoFill={false} speed={80}>
-            <div style={{ marginRight: 10 }}>{videoTitle}</div>
+            {videoTitle == "" ? (
+              <div style={{ marginRight: 10 }}>**ĐANG TRỐNG**</div>
+            ) : (
+              <div style={{ marginRight: 10 }}>{videoTitle}</div>
+            )}
           </Marquee>
         </div>
       </div>
       <div className="comment">
         <div className="live-cmt">Trò chuyện trực tiếp</div>
         <div className="comments">
-          {comments?.slice(-3).map((comment, index) => (
+          {comments?.length == 0 || !comments ? (
             <div className="cmt">
-              <div className="cmt-name">{comment.name}</div>
-              <div className="cmt-content">
-                {extractTextFromHTML(comment.comment)}
-              </div>
+              <div>Hãy là người đầu tiên bình luận.</div>
             </div>
-          ))}
+          ) : (
+            comments?.slice(-3).map((comment, index) => (
+              <div className="cmt">
+                <div className="cmt-name">{comment.name}</div>
+                <div className="cmt-content">
+                  {extractTextFromHTML(comment.comment)}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
