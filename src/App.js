@@ -9,7 +9,6 @@ function App() {
   const [time, setTime] = React.useState("");
   const [second, setSecond] = React.useState("");
   const [session, setSession] = React.useState("");
-  const [comments, setComments] = React.useState([]);
   const [videoTitle, setVideoTitle] = React.useState("");
   const [playingQueue, setPlayingQueue] = React.useState([]);
   const [currentVideoIndex, setCurrentVideoIndex] = React.useState(0);
@@ -50,12 +49,19 @@ function App() {
     }
 
     showTime();
-    // Call getComments every 15 seconds
-    setInterval(getComments, 15000);
+    // Call getComments every 10 seconds
+    const interval = setInterval(getComments, 10000);
     getComments();
+    return () => clearInterval(interval);
   }, []);
 
-  let searchCache = {};
+  // let searchCache = {};
+
+  // Function to search YouTube API
+  var searchCache = {};
+  const rateLimit = { count: 0, lastReset: Date.now() };
+  const RATE_LIMIT_MAX = 100; // Max number of requests
+  const RATE_LIMIT_INTERVAL = 1000 * 60 * 60 * 24; // 24 hours
 
   // Function to search YouTube API
   const searchYouTube = async (query) => {
@@ -64,7 +70,19 @@ function App() {
       return searchCache[query];
     }
 
-    const apiKey = "AIzaSyC9_pzo_I_4kLwD8FSm5ZHdvlZRFDA8YsI";
+    // Rate limiting
+    const now = Date.now();
+    if (now - rateLimit.lastReset > RATE_LIMIT_INTERVAL) {
+      rateLimit.count = 0;
+      rateLimit.lastReset = now;
+    }
+
+    if (rateLimit.count >= RATE_LIMIT_MAX) {
+      console.error("Rate limit exceeded. Please try again later.");
+      return null;
+    }
+
+    const apiKey = "AIzaSyAyRE6e1HNeGHbavr1jl4nKIhGyDdn5Y6s";
     const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(
       query
     )}&key=${apiKey}`;
@@ -73,15 +91,31 @@ function App() {
       const searchResponse = await axios.get(searchUrl);
       const videoId = searchResponse.data.items[0].id.videoId;
 
-      const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`;
+      const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${apiKey}`;
       const detailsResponse = await axios.get(detailsUrl);
       const videoTitle = detailsResponse.data.items[0].snippet.title;
+      const duration = detailsResponse.data.items[0].contentDetails.duration;
+
+      // Parse ISO 8601 duration to get the total minutes
+      const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+      const hours = parseInt(match[1]) || 0;
+      const minutes = parseInt(match[2]) || 0;
+      const totalMinutes = hours * 60 + minutes;
+
+      if (totalMinutes > 20) {
+        return null;
+      }
 
       const videoData = { videoId, videoTitle };
       searchCache[query] = videoData; // Store the result in the cache
+      rateLimit.count++; // Increment rate limit count
       return videoData;
     } catch (error) {
-      console.error("YouTube API error:", error);
+      if (error.response && error.response.status === 403) {
+        console.error("YouTube API quota exceeded.");
+      } else {
+        console.error("YouTube API error:", error);
+      }
       return null;
     }
   };
@@ -104,33 +138,57 @@ function App() {
 
   const getComments = () => {
     axios
-      .get("https://tunnaduong.com/test_api/fb_live_chat.php")
+      .get("http://localhost:3103/php-test-live-chat/")
       .then(async (response) => {
-        const comments = response.data.content;
-        setComments(comments);
+        const newComments = response.data.content;
+        console.log(newComments);
 
-        // Filter comments that start with "/yt"
-        const ytComments = comments.filter(
-          (commentObj) =>
-            typeof commentObj.comment === "string" &&
-            commentObj.comment.startsWith("/yt ")
-        );
+        // Retrieve old comments from local storage
+        const oldComments = JSON.parse(localStorage.getItem("comments")) || [];
 
-        for (const commentObj of ytComments) {
-          const songName = commentObj.comment.slice(4).trim();
-          const videoData = await searchYouTube(songName);
-          if (videoData) {
-            console.log(
-              `Found video ID ${videoData.videoId} for song ${songName}`
-            );
-            if (!addedVideoIds.has(videoData.videoId)) {
-              addToQueue(videoData);
-              addedVideoIds.add(videoData.videoId);
+        // Compare old and new comments
+        const areCommentsDifferent =
+          JSON.stringify(oldComments) !== JSON.stringify(newComments);
+
+        if (areCommentsDifferent) {
+          // Save new comments to local storage
+          localStorage.setItem("comments", JSON.stringify(newComments));
+
+          // Filter comments that start with "/yt"
+          const ytComments = JSON.parse(
+            localStorage.getItem("comments")
+          )?.filter(
+            (commentObj) =>
+              typeof commentObj.comment === "string" &&
+              commentObj.comment.startsWith("/yt ")
+          );
+          console.log("ytComments", ytComments);
+
+          for (const commentObj of ytComments) {
+            console.log("cmtobjj", commentObj);
+            let songName = commentObj.comment.slice(4).trim();
+            songName += " cover remix"; // Append " nightcore cover remix" to the song name
+
+            const videoData = await searchYouTube(songName);
+            if (videoData) {
+              console.log(
+                `Found video ID ${videoData.videoId} for song ${songName}`
+              );
+              if (!addedVideoIds.has(videoData.videoId)) {
+                addToQueue(videoData);
+                addedVideoIds.add(videoData.videoId);
+              }
+            } else {
+              console.log(`No video found for song ${songName}`);
             }
           }
+        } else {
+          console.log("Comments have not changed.");
         }
       })
-      .catch((err) => console.log(err));
+      .catch((error) => {
+        console.error("Error fetching comments:", error);
+      });
   };
 
   const extractTextFromHTML = (html) => {
@@ -166,7 +224,6 @@ function App() {
             width: "100%",
             playerVars: {
               autoplay: 1,
-
               cc_load_policy: 0,
               fs: 0,
               iv_load_policy: 3,
@@ -250,19 +307,22 @@ function App() {
       <div className="comment">
         <div className="live-cmt">Trò chuyện trực tiếp</div>
         <div className="comments">
-          {comments?.length == 0 || !comments ? (
+          {!Array.isArray(JSON.parse(localStorage.getItem("comments"))) ||
+          JSON.parse(localStorage.getItem("comments")).length === 0 ? (
             <div className="cmt">
               <div>Hãy là người đầu tiên bình luận.</div>
             </div>
           ) : (
-            comments?.slice(-3).map((comment, index) => (
-              <div className="cmt">
-                <div className="cmt-name">{comment.name}</div>
-                <div className="cmt-content">
-                  {extractTextFromHTML(comment.comment)}
+            JSON.parse(localStorage.getItem("comments"))
+              ?.slice(-5)
+              .map((comment, index) => (
+                <div className="cmt">
+                  <div className="cmt-name">{comment.name}</div>
+                  <div className="cmt-content">
+                    {extractTextFromHTML(comment.comment)}
+                  </div>
                 </div>
-              </div>
-            ))
+              ))
           )}
         </div>
       </div>
