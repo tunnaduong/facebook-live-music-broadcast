@@ -31,9 +31,9 @@ body {
   width: 100vw;
 }
 
-.player-wrapper {
+/* .player-wrapper {
   pointer-events: none;
-}
+} */
 
 .clock {
   position: absolute;
@@ -160,4 +160,8 @@ body {
   position: absolute;
   left: 0;
   bottom: 140px;
+}
+
+.above {
+  color: white;
 }
