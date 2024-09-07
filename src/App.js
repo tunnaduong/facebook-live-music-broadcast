@@ -4,6 +4,8 @@ import YouTube from "react-youtube";
 import { LogoFacebook, LogoYoutube, LogoInstagram } from "react-ionicons";
 import Marquee from "react-fast-marquee";
 import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [time, setTime] = React.useState("");
@@ -50,7 +52,7 @@ function App() {
 
     showTime();
     // Call getComments every 10 seconds
-    const interval = setInterval(getComments, 10000);
+    const interval = setInterval(getComments, 3000);
     getComments();
     return () => clearInterval(interval);
   }, []);
@@ -82,7 +84,7 @@ function App() {
       return null;
     }
 
-    const apiKey = "AIzaSyAyRE6e1HNeGHbavr1jl4nKIhGyDdn5Y6s";
+    const apiKey = "AIzaSyA7Ol1fk9CEV1jYxLc5J8ikT8MMfAuwPIg";
     const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(
       query
     )}&key=${apiKey}`;
@@ -126,6 +128,16 @@ function App() {
     setPlayingQueue((prevQueue) => {
       if (!prevQueue.some((video) => video.videoId === videoData.videoId)) {
         console.log(`Added video ID ${videoData.videoId} to the playing queue`);
+        toast.success(`Đã thêm ${videoData.videoTitle} vào hàng đợi!`, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
         return [...prevQueue, videoData];
       } else {
         console.log(
@@ -141,7 +153,6 @@ function App() {
       .get("http://localhost:3103/php-test-live-chat/")
       .then(async (response) => {
         const newComments = response.data.content;
-        console.log(newComments);
 
         // Retrieve old comments from local storage
         const oldComments = JSON.parse(localStorage.getItem("comments")) || [];
@@ -164,10 +175,12 @@ function App() {
           );
           console.log("ytComments", ytComments);
 
+          let latestNotFoundKeyword = null; // Variable to store the latest not found keyword
+
           for (const commentObj of ytComments) {
             console.log("cmtobjj", commentObj);
             let songName = commentObj.comment.slice(4).trim();
-            songName += " cover remix"; // Append " nightcore cover remix" to the song name
+            songName += " cover remix"; // Append " cover remix" to the song name
 
             const videoData = await searchYouTube(songName);
             if (videoData) {
@@ -180,7 +193,25 @@ function App() {
               }
             } else {
               console.log(`No video found for song ${songName}`);
+              latestNotFoundKeyword = songName; // Store the latest not found keyword
             }
+          }
+
+          // Show a single toast message for the latest not found keyword
+          if (latestNotFoundKeyword) {
+            toast.error(
+              `Không tìm thấy video có tên ${latestNotFoundKeyword}!`,
+              {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+              }
+            );
           }
         } else {
           console.log("Comments have not changed.");
@@ -237,10 +268,24 @@ function App() {
           onEnd={onEnd}
         />
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <div className="above">
         <Marquee>
-          Lựa chọn bài hát tiếp theo bằng cách comment theo cú pháp: "/yt
-          tên_bài_hát" bên dưới video!!!
+          <div style={{ marginRight: 10 }}>
+            Lựa chọn bài hát tiếp theo bằng cách comment theo cú pháp: "/yt
+            tên_bài_hát" bên dưới video!!!
+          </div>
         </Marquee>
       </div>
       <div className="title">24/7 Music Radio</div>
@@ -274,22 +319,22 @@ function App() {
       <div className="slider-wrapper">
         <div className="live-cmt">Tiếp theo:</div>
         <div className="slider">
-          <Marquee speed={80}>
-            {playingQueue.length == 0 ||
-            currentVideoIndex >= playingQueue.length - 1 ? (
-              <div style={{ marginRight: 10 }}>**ĐANG TRỐNG**</div>
-            ) : (
-              <div>
-                {playingQueue
-                  .slice(currentVideoIndex + 1)
-                  .map((video, index) => (
-                    <span key={index} style={{ marginRight: 10 }}>
-                      {index + 1}) {video.videoTitle} ·
-                    </span>
-                  ))}
-              </div>
-            )}
-          </Marquee>
+          {playingQueue.length == 0 ||
+          currentVideoIndex >= playingQueue.length - 1 ? (
+            <div style={{ marginRight: 10 }}>**ĐANG TRỐNG**</div>
+          ) : (
+            <div>
+              {playingQueue.slice(currentVideoIndex + 1).map((video, index) => (
+                <div
+                  key={index}
+                  className="next-song"
+                  style={{ marginRight: 10 }}
+                >
+                  {index + 1}) {video.videoTitle}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <div className="now-playing-wrapper">

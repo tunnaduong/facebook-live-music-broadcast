@@ -92,7 +92,7 @@ body {
 .slider-wrapper {
   position: absolute;
   left: 0;
-  bottom: 40px;
+  bottom: 130px;
 }
 
 .slider {
@@ -105,6 +105,8 @@ body {
   font-size: 28px;
   font-weight: 600;
   width: 500px;
+  height: 148px;
+  overflow-y: hidden;
 }
 
 .now-playing {
@@ -162,11 +164,19 @@ body {
 .now-playing-wrapper {
   position: absolute;
   left: 0;
-  bottom: 140px;
+  bottom: 40px;
 }
 
 .above {
   color: white;
   text-shadow: 1px 1px 2px black;
-  font-size: 24px;
+  font-size: 35px;
+}
+
+.next-song {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 20px;
+  font-weight: 400;
 }
