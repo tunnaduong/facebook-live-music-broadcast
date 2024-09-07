@@ -218,15 +218,18 @@ function App() {
         <div className="live-cmt">Tiếp theo:</div>
         <div className="slider">
           <Marquee speed={80}>
-            {playingQueue.length == 0 ? (
+            {playingQueue.length == 0 ||
+            currentVideoIndex >= playingQueue.length - 1 ? (
               <div style={{ marginRight: 10 }}>**ĐANG TRỐNG**</div>
             ) : (
               <div>
-                {playingQueue.slice(-currentVideoIndex).map((video, index) => (
-                  <span key={index} style={{ marginRight: 10 }}>
-                    {index + 1}) {video.videoTitle} ·
-                  </span>
-                ))}
+                {playingQueue
+                  .slice(currentVideoIndex + 1)
+                  .map((video, index) => (
+                    <span key={index} style={{ marginRight: 10 }}>
+                      {index + 1}) {video.videoTitle} ·
+                    </span>
+                  ))}
               </div>
             )}
           </Marquee>
