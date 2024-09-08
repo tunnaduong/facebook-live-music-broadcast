@@ -64,7 +64,7 @@ function App() {
       return searchCache[query];
     }
 
-    const apiKey = "AIzaSyC9_pzo_I_4kLwD8FSm5ZHdvlZRFDA8YsI";
+    const apiKey = "AIzaSyBUbeDMfZXlbFlIqBRH1M7tbBX3Hl69gQc";
     const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(
       query
     )}&key=${apiKey}`;
