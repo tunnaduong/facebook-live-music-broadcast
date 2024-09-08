@@ -85,17 +85,26 @@ function App() {
       return null;
     }
 
-    const apiKey = "AIzaSyBUbeDMfZXlbFlIqBRH1M7tbBX3Hl69gQc";
+    const token =
+      "ya29.a0AcM612ytcfS9kPfyUIGMzUSuj6fmxIS7EQ5wl6W9HVAWCgNSZJvQbat9X0LFMLaBZdwccPUmyvk5nTNiJ5UUtumRuO4RsW9bnFL71FM798nhM_1dvqV7iI996k8QQO4uk19HpYVclIJjQZLUbgd-bmjfGCDwaXZx1cT3JwnBaCgYKAU8SARISFQHGX2MivBEg5F6etFel4dVDKDzz_A0175";
     const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(
       query
-    )}&key=${apiKey}`;
+    )}`;
 
     try {
-      const searchResponse = await axios.get(searchUrl);
+      const searchResponse = await axios.get(searchUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const videoId = searchResponse.data.items[0].id.videoId;
 
-      const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${apiKey}`;
-      const detailsResponse = await axios.get(detailsUrl);
+      const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}`;
+      const detailsResponse = await axios.get(detailsUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const videoTitle = detailsResponse.data.items[0].snippet.title;
       const duration = detailsResponse.data.items[0].contentDetails.duration;
 
