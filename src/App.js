@@ -298,7 +298,9 @@ function App() {
           </div>
         </Marquee>
       </div>
-      <div className="title">24/7 Music Radio</div>
+      <div className="title" onClick={() => localStorage.clear()}>
+        24/7 Music Radio
+      </div>
       <div className="clock">
         <div>{time}</div>
         <div>
