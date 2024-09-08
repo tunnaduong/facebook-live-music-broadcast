@@ -14,6 +14,7 @@ function App() {
   const [videoTitle, setVideoTitle] = React.useState("");
   const [playingQueue, setPlayingQueue] = React.useState([]);
   const [currentVideoIndex, setCurrentVideoIndex] = React.useState(0);
+  const [player, setPlayer] = React.useState(null);
 
   React.useEffect(() => {
     function showTime() {
@@ -232,10 +233,19 @@ function App() {
     // access to player in all event handlers via event.target
     setVideoTitle(event.target.getVideoData().title);
     event.target.playVideo();
+    setPlayer(event.target);
   };
 
   const onEnd = () => {
-    setCurrentVideoIndex((prevIndex) => (prevIndex + 1) % playingQueue.length);
+    setCurrentVideoIndex((prevIndex) => {
+      if (prevIndex < playingQueue.length - 1) {
+        player.playVideo();
+        return prevIndex + 1;
+      } else {
+        player.playVideo();
+        return prevIndex;
+      }
+    });
   };
 
   React.useEffect(() => {
@@ -325,13 +335,15 @@ function App() {
           ) : (
             <div>
               {playingQueue.slice(currentVideoIndex + 1).map((video, index) => (
-                <div
-                  key={index}
-                  className="next-song"
-                  style={{ marginRight: 10 }}
-                >
-                  {index + 1}) {video.videoTitle}
-                </div>
+                <>
+                  <div
+                    key={index}
+                    className="next-song"
+                    style={{ marginRight: 10 }}
+                  >
+                    {index + 1}) {video.videoTitle}
+                  </div>
+                </>
               ))}
             </div>
           )}
