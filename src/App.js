@@ -118,6 +118,27 @@ function App() {
       const detailsUrl = `https://noembed.com/embed?url=http://www.youtube.com/watch?v=${videoId}`;
 
       detailsResponse = await axios.get(detailsUrl);
+
+      if (
+        detailsResponse.data.error ||
+        detailsResponse.data.error == "401 Unauthorized"
+      ) {
+        toast.error(
+          `Bài hát bạn yêu cầu không cho phép nhúng! Hãy chọn bài hát khác.`,
+          {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          }
+        );
+        return null;
+      }
+
       const videoTitle = detailsResponse.data.title;
       // const duration = detailsResponse.data.items[0].contentDetails.duration;
 
@@ -231,6 +252,33 @@ function App() {
               console.log(`No video found for song ${songName}`);
               latestNotFoundKeyword = songName; // Store the latest not found keyword
             }
+          }
+
+          // Check for /next command
+          const nextCommand = comments.find(
+            (commentObj) =>
+              typeof commentObj.comment === "string" &&
+              commentObj.comment.trim().toLowerCase() === "/next"
+          );
+
+          if (nextCommand) {
+            console.log("Next command detected");
+            toast.success(
+              `Đang bỏ qua bài hát hiện tại và chuyển sang bài hát tiếp theo...`,
+              {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+              }
+            );
+            setCurrentVideoIndex(
+              (prevIndex) => (prevIndex + 1) % playingQueue.length
+            );
           }
 
           // Show a single toast message for the latest not found keyword
