@@ -151,7 +151,7 @@ function App() {
 
   const getComments = () => {
     axios
-      .get("http://localhost:3103/php-test-live-chat/")
+      .get("https://tunnaduong.com/test_api/fb_live_chat.php")
       .then(async (response) => {
         const newComments = response.data.content;
 
