@@ -85,25 +85,50 @@ function App() {
       return null;
     }
 
-    const token = process.env.REACT_APP_CLIENT_KEY;
-    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(
+    const clientKey = process.env.REACT_APP_CLIENT_KEY;
+    const token = process.env.REACT_APP_TOKEN;
+    let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(
       query
     )}`;
+    let detailsResponse;
 
     try {
-      const searchResponse = await axios.get(searchUrl, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      let searchResponse;
+      if (clientKey) {
+        // Use Bearer token
+        console.log("Using Bearer token");
+        console.log("searchUrl:", searchUrl);
+        searchResponse = await axios.get(searchUrl, {
+          headers: {
+            Authorization: `Bearer ${clientKey}`,
+          },
+        });
+      } else if (token) {
+        // Use API key as query parameter
+        searchUrl += `&key=${token}`;
+        console.log("Using API key");
+        console.log("searchUrl:", searchUrl);
+        searchResponse = await axios.get(searchUrl);
+      } else {
+        throw new Error("No authentication method available");
+      }
+
       const videoId = searchResponse.data.items[0].id.videoId;
 
       const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}`;
-      const detailsResponse = await axios.get(detailsUrl, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      if (clientKey) {
+        // Use Bearer token
+        detailsResponse = await axios.get(detailsUrl, {
+          headers: {
+            Authorization: `Bearer ${clientKey}`,
+          },
+        });
+      } else if (token) {
+        // Use API key as query parameter
+        detailsResponse = await axios.get(`${detailsUrl}&key=${token}`);
+      } else {
+        throw new Error("No authentication method available");
+      }
       const videoTitle = detailsResponse.data.items[0].snippet.title;
       const duration = detailsResponse.data.items[0].contentDetails.duration;
 
@@ -343,7 +368,7 @@ function App() {
           currentVideoIndex >= playingQueue.length - 1 ? (
             <div style={{ marginRight: 10 }}>**ĐANG TRỐNG**</div>
           ) : (
-            <div>
+            <>
               {playingQueue.slice(currentVideoIndex + 1).map((video, index) => (
                 <>
                   <div
@@ -355,7 +380,7 @@ function App() {
                   </div>
                 </>
               ))}
-            </div>
+            </>
           )}
         </div>
       </div>

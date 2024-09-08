@@ -93,6 +93,7 @@ body {
   position: absolute;
   left: 0;
   bottom: 130px;
+  max-width: 500px;
 }
 
 .slider {
