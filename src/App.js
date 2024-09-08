@@ -115,45 +115,34 @@ function App() {
 
       const videoId = searchResponse.data.items[0].id.videoId;
 
-      const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}`;
-      if (clientKey) {
-        // Use Bearer token
-        detailsResponse = await axios.get(detailsUrl, {
-          headers: {
-            Authorization: `Bearer ${clientKey}`,
-          },
-        });
-      } else if (token) {
-        // Use API key as query parameter
-        detailsResponse = await axios.get(`${detailsUrl}&key=${token}`);
-      } else {
-        throw new Error("No authentication method available");
-      }
-      const videoTitle = detailsResponse.data.items[0].snippet.title;
-      const duration = detailsResponse.data.items[0].contentDetails.duration;
+      const detailsUrl = `https://noembed.com/embed?url=http://www.youtube.com/watch?v=${videoId}`;
 
-      // Parse ISO 8601 duration to get the total minutes
-      const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
-      const hours = parseInt(match[1]) || 0;
-      const minutes = parseInt(match[2]) || 0;
-      const totalMinutes = hours * 60 + minutes;
+      detailsResponse = await axios.get(detailsUrl);
+      const videoTitle = detailsResponse.data.title;
+      // const duration = detailsResponse.data.items[0].contentDetails.duration;
 
-      if (totalMinutes > 20) {
-        toast.error(
-          `Bài hát ${videoTitle} dài hơn 20 phút! Hãy chọn bài hát khác ngắn hơn.`,
-          {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "light",
-          }
-        );
-        return null;
-      }
+      // // Parse ISO 8601 duration to get the total minutes
+      // const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+      // const hours = parseInt(match[1]) || 0;
+      // const minutes = parseInt(match[2]) || 0;
+      // const totalMinutes = hours * 60 + minutes;
+
+      // if (totalMinutes > 20) {
+      //   toast.error(
+      //     `Bài hát ${videoTitle} dài hơn 20 phút! Hãy chọn bài hát khác ngắn hơn.`,
+      //     {
+      //       position: "top-right",
+      //       autoClose: 5000,
+      //       hideProgressBar: false,
+      //       closeOnClick: true,
+      //       pauseOnHover: true,
+      //       draggable: true,
+      //       progress: undefined,
+      //       theme: "light",
+      //     }
+      //   );
+      //   return null;
+      // }
 
       const videoData = { videoId, videoTitle };
       searchCache[query] = videoData; // Store the result in the cache
