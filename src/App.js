@@ -4,15 +4,17 @@ import YouTube from "react-youtube";
 import { LogoFacebook, LogoYoutube, LogoInstagram } from "react-ionicons";
 import Marquee from "react-fast-marquee";
 import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [time, setTime] = React.useState("");
   const [second, setSecond] = React.useState("");
   const [session, setSession] = React.useState("");
-  const [comments, setComments] = React.useState([]);
   const [videoTitle, setVideoTitle] = React.useState("");
   const [playingQueue, setPlayingQueue] = React.useState([]);
   const [currentVideoIndex, setCurrentVideoIndex] = React.useState(0);
+  const [player, setPlayer] = React.useState(null);
 
   React.useEffect(() => {
     function showTime() {
@@ -50,18 +52,37 @@ function App() {
     }
 
     showTime();
-    // Call getComments every 15 seconds
-    setInterval(getComments, 15000);
+    // Call getComments every 10 seconds
+    const interval = setInterval(getComments, 3000);
     getComments();
+    return () => clearInterval(interval);
   }, []);
 
-  let searchCache = {};
+  // let searchCache = {};
+
+  // Function to search YouTube API
+  var searchCache = {};
+  const rateLimit = { count: 0, lastReset: Date.now() };
+  const RATE_LIMIT_MAX = 100; // Max number of requests
+  const RATE_LIMIT_INTERVAL = 1000 * 60 * 60 * 24; // 24 hours
 
   // Function to search YouTube API
   const searchYouTube = async (query) => {
     if (searchCache[query]) {
       console.log(`Cache hit for query: ${query}`);
       return searchCache[query];
+    }
+
+    // Rate limiting
+    const now = Date.now();
+    if (now - rateLimit.lastReset > RATE_LIMIT_INTERVAL) {
+      rateLimit.count = 0;
+      rateLimit.lastReset = now;
+    }
+
+    if (rateLimit.count >= RATE_LIMIT_MAX) {
+      console.error("Rate limit exceeded. Please try again later.");
+      return null;
     }
 
     const apiKey = "AIzaSyBUbeDMfZXlbFlIqBRH1M7tbBX3Hl69gQc";
@@ -73,15 +94,31 @@ function App() {
       const searchResponse = await axios.get(searchUrl);
       const videoId = searchResponse.data.items[0].id.videoId;
 
-      const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`;
+      const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${apiKey}`;
       const detailsResponse = await axios.get(detailsUrl);
       const videoTitle = detailsResponse.data.items[0].snippet.title;
+      const duration = detailsResponse.data.items[0].contentDetails.duration;
+
+      // Parse ISO 8601 duration to get the total minutes
+      const match = duration.match(/PT(\d+H)?(\d+M)?(\d+S)?/);
+      const hours = parseInt(match[1]) || 0;
+      const minutes = parseInt(match[2]) || 0;
+      const totalMinutes = hours * 60 + minutes;
+
+      if (totalMinutes > 20) {
+        return null;
+      }
 
       const videoData = { videoId, videoTitle };
       searchCache[query] = videoData; // Store the result in the cache
+      rateLimit.count++; // Increment rate limit count
       return videoData;
     } catch (error) {
-      console.error("YouTube API error:", error);
+      if (error.response && error.response.status === 403) {
+        console.error("YouTube API quota exceeded.");
+      } else {
+        console.error("YouTube API error:", error);
+      }
       return null;
     }
   };
@@ -92,6 +129,16 @@ function App() {
     setPlayingQueue((prevQueue) => {
       if (!prevQueue.some((video) => video.videoId === videoData.videoId)) {
         console.log(`Added video ID ${videoData.videoId} to the playing queue`);
+        toast.success(`Đã thêm ${videoData.videoTitle} vào hàng đợi!`, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "light",
+        });
         return [...prevQueue, videoData];
       } else {
         console.log(
@@ -104,33 +151,76 @@ function App() {
 
   const getComments = () => {
     axios
-      .get("https://tunnaduong.com/test_api/fb_live_chat.php")
+      .get("http://localhost:3103/php-test-live-chat/")
       .then(async (response) => {
-        const comments = response.data.content;
-        setComments(comments);
+        const newComments = response.data.content;
 
-        // Filter comments that start with "/yt"
-        const ytComments = comments.filter(
-          (commentObj) =>
-            typeof commentObj.comment === "string" &&
-            commentObj.comment.startsWith("/yt ")
-        );
+        // Retrieve old comments from local storage
+        const oldComments = JSON.parse(localStorage.getItem("comments")) || [];
 
-        for (const commentObj of ytComments) {
-          const songName = commentObj.comment.slice(4).trim();
-          const videoData = await searchYouTube(songName);
-          if (videoData) {
-            console.log(
-              `Found video ID ${videoData.videoId} for song ${songName}`
-            );
-            if (!addedVideoIds.has(videoData.videoId)) {
-              addToQueue(videoData);
-              addedVideoIds.add(videoData.videoId);
+        // Compare old and new comments
+        const areCommentsDifferent =
+          JSON.stringify(oldComments) !== JSON.stringify(newComments);
+
+        if (areCommentsDifferent) {
+          // Save new comments to local storage
+          localStorage.setItem("comments", JSON.stringify(newComments));
+
+          // Filter comments that start with "/yt"
+          const ytComments = JSON.parse(
+            localStorage.getItem("comments")
+          )?.filter(
+            (commentObj) =>
+              typeof commentObj.comment === "string" &&
+              commentObj.comment.startsWith("/yt ")
+          );
+          console.log("ytComments", ytComments);
+
+          let latestNotFoundKeyword = null; // Variable to store the latest not found keyword
+
+          for (const commentObj of ytComments) {
+            console.log("cmtobjj", commentObj);
+            let songName = commentObj.comment.slice(4).trim();
+            songName += " remix"; // Append " remix" to the song name
+
+            const videoData = await searchYouTube(songName);
+            if (videoData) {
+              console.log(
+                `Found video ID ${videoData.videoId} for song ${songName}`
+              );
+              if (!addedVideoIds.has(videoData.videoId)) {
+                addToQueue(videoData);
+                addedVideoIds.add(videoData.videoId);
+              }
+            } else {
+              console.log(`No video found for song ${songName}`);
+              latestNotFoundKeyword = songName; // Store the latest not found keyword
             }
           }
+
+          // Show a single toast message for the latest not found keyword
+          if (latestNotFoundKeyword) {
+            toast.error(
+              `Không tìm thấy video có tên ${latestNotFoundKeyword}!`,
+              {
+                position: "top-right",
+                autoClose: 5000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+              }
+            );
+          }
+        } else {
+          console.log("Comments have not changed.");
         }
       })
-      .catch((err) => console.log(err));
+      .catch((error) => {
+        console.error("Error fetching comments:", error);
+      });
   };
 
   const extractTextFromHTML = (html) => {
@@ -143,10 +233,19 @@ function App() {
     // access to player in all event handlers via event.target
     setVideoTitle(event.target.getVideoData().title);
     event.target.playVideo();
+    setPlayer(event.target);
   };
 
   const onEnd = () => {
-    setCurrentVideoIndex((prevIndex) => (prevIndex + 1) % playingQueue.length);
+    setCurrentVideoIndex((prevIndex) => {
+      if (prevIndex < playingQueue.length - 1) {
+        player.playVideo();
+        return prevIndex + 1;
+      } else {
+        player.playVideo();
+        return prevIndex;
+      }
+    });
   };
 
   React.useEffect(() => {
@@ -166,7 +265,6 @@ function App() {
             width: "100%",
             playerVars: {
               autoplay: 1,
-
               cc_load_policy: 0,
               fs: 0,
               iv_load_policy: 3,
@@ -180,10 +278,24 @@ function App() {
           onEnd={onEnd}
         />
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <div className="above">
         <Marquee>
-          Lựa chọn bài hát tiếp theo bằng cách comment theo cú pháp: "/yt
-          tên_bài_hát" bên dưới video!!!
+          <div style={{ marginRight: 10 }}>
+            Lựa chọn bài hát tiếp theo bằng cách comment theo cú pháp: "/yt
+            tên_bài_hát" bên dưới video!!!
+          </div>
         </Marquee>
       </div>
       <div className="title">24/7 Music Radio</div>
@@ -217,22 +329,24 @@ function App() {
       <div className="slider-wrapper">
         <div className="live-cmt">Tiếp theo:</div>
         <div className="slider">
-          <Marquee speed={80}>
-            {playingQueue.length == 0 ||
-            currentVideoIndex >= playingQueue.length - 1 ? (
-              <div style={{ marginRight: 10 }}>**ĐANG TRỐNG**</div>
-            ) : (
-              <div>
-                {playingQueue
-                  .slice(currentVideoIndex + 1)
-                  .map((video, index) => (
-                    <span key={index} style={{ marginRight: 10 }}>
-                      {index + 1}) {video.videoTitle} ·
-                    </span>
-                  ))}
-              </div>
-            )}
-          </Marquee>
+          {playingQueue.length == 0 ||
+          currentVideoIndex >= playingQueue.length - 1 ? (
+            <div style={{ marginRight: 10 }}>**ĐANG TRỐNG**</div>
+          ) : (
+            <div>
+              {playingQueue.slice(currentVideoIndex + 1).map((video, index) => (
+                <>
+                  <div
+                    key={index}
+                    className="next-song"
+                    style={{ marginRight: 10 }}
+                  >
+                    {index + 1}) {video.videoTitle}
+                  </div>
+                </>
+              ))}
+            </div>
+          )}
         </div>
       </div>
       <div className="now-playing-wrapper">
@@ -250,19 +364,22 @@ function App() {
       <div className="comment">
         <div className="live-cmt">Trò chuyện trực tiếp</div>
         <div className="comments">
-          {comments?.length == 0 || !comments ? (
+          {!Array.isArray(JSON.parse(localStorage.getItem("comments"))) ||
+          JSON.parse(localStorage.getItem("comments")).length === 0 ? (
             <div className="cmt">
               <div>Hãy là người đầu tiên bình luận.</div>
             </div>
           ) : (
-            comments?.slice(-3).map((comment, index) => (
-              <div className="cmt">
-                <div className="cmt-name">{comment.name}</div>
-                <div className="cmt-content">
-                  {extractTextFromHTML(comment.comment)}
+            JSON.parse(localStorage.getItem("comments"))
+              ?.slice(-5)
+              .map((comment, index) => (
+                <div className="cmt">
+                  <div className="cmt-name">{comment.name}</div>
+                  <div className="cmt-content">
+                    {extractTextFromHTML(comment.comment)}
+                  </div>
                 </div>
-              </div>
-            ))
+              ))
           )}
         </div>
       </div>
