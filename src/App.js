@@ -139,6 +139,19 @@ function App() {
       const totalMinutes = hours * 60 + minutes;
 
       if (totalMinutes > 20) {
+        toast.error(
+          `Bài hát ${videoTitle} dài hơn 20 phút! Hãy chọn bài hát khác ngắn hơn.`,
+          {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "light",
+          }
+        );
         return null;
       }
 
