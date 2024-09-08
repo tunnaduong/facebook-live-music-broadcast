@@ -85,8 +85,7 @@ function App() {
       return null;
     }
 
-    const token =
-      "ya29.a0AcM612ytcfS9kPfyUIGMzUSuj6fmxIS7EQ5wl6W9HVAWCgNSZJvQbat9X0LFMLaBZdwccPUmyvk5nTNiJ5UUtumRuO4RsW9bnFL71FM798nhM_1dvqV7iI996k8QQO4uk19HpYVclIJjQZLUbgd-bmjfGCDwaXZx1cT3JwnBaCgYKAU8SARISFQHGX2MivBEg5F6etFel4dVDKDzz_A0175";
+    const token = process.env.REACT_APP_CLIENT_KEY;
     const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&q=${encodeURIComponent(
       query
     )}`;
