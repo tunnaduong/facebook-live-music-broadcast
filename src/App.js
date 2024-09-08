@@ -214,7 +214,7 @@ function App() {
           for (const commentObj of ytComments) {
             console.log("cmtobjj", commentObj);
             let songName = commentObj.comment.slice(4).trim();
-            songName += " remix"; // Append " remix" to the song name
+            songName += ""; // Append " remix" to the song name
 
             const videoData = await searchYouTube(songName);
             if (videoData) {
