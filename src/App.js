@@ -281,10 +281,8 @@ function App() {
             );
             setCurrentVideoIndex((prevIndex) => {
               if (prevIndex < playingQueue.length - 1) {
-                player.playVideo();
                 return prevIndex + 1;
               } else {
-                player.playVideo();
                 return prevIndex;
               }
             });
