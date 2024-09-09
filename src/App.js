@@ -279,9 +279,15 @@ function App() {
                 theme: "light",
               }
             );
-            setCurrentVideoIndex(
-              (prevIndex) => (prevIndex + 1) % playingQueue.length
-            );
+            setCurrentVideoIndex((prevIndex) => {
+              if (prevIndex < playingQueue.length - 1) {
+                player.playVideo();
+                return prevIndex + 1;
+              } else {
+                player.playVideo();
+                return prevIndex;
+              }
+            });
           }
 
           // Show a single toast message for the latest not found keyword
