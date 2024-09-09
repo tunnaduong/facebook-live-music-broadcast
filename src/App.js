@@ -236,10 +236,18 @@ function App() {
           let latestNotFoundKeyword = null; // Variable to store the latest not found keyword
 
           for (const commentObj of ytComments) {
-            const comment = commentObj.comment.trim();
+            // Check for /next command
+            const nextCommand = JSON.parse(
+              localStorage.getItem("comments")
+            )?.find(
+              (commentObj) =>
+                typeof commentObj.comment === "string" &&
+                commentObj.comment.trim().toLowerCase() === "/next"
+            );
 
             // Check if the command is `/next`
-            if (comment === "/next") {
+            if (nextCommand) {
+              console.log("Next command found. Skipping to the next song.");
               skipToNextSong(); // Skip to the next song
               continue; // Skip the rest of the loop for this iteration
             }
@@ -303,6 +311,7 @@ function App() {
   };
 
   const skipToNextSong = () => {
+    console.log("Skipping to the next song...");
     setCurrentVideoIndex((prevIndex) => {
       if (prevIndex < playingQueue.length - 1) {
         player.playVideo();
