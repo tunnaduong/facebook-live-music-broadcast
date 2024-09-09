@@ -379,7 +379,8 @@ function App() {
         <Marquee>
           <div style={{ marginRight: 10 }}>
             Lựa chọn bài hát tiếp theo bằng cách comment theo cú pháp: "/yt
-            tên_bài_hát" bên dưới video!!!
+            tên_bài_hát" bên dưới video!!! Hoặc bỏ qua bài hát hiện tại bằng
+            cách comment "/next"!!!
           </div>
         </Marquee>
       </div>
