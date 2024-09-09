@@ -255,7 +255,9 @@ function App() {
           }
 
           // Check for /next command
-          const nextCommand = comments.find(
+          const nextCommand = JSON.parse(
+            localStorage.getItem("comments")
+          )?.find(
             (commentObj) =>
               typeof commentObj.comment === "string" &&
               commentObj.comment.trim().toLowerCase() === "/next"
