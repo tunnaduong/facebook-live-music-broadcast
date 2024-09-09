@@ -6,6 +6,7 @@ import Marquee from "react-fast-marquee";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import qr_payment from "./qr-payment.webp";
 
 function App() {
   const [time, setTime] = React.useState("");
@@ -386,6 +387,10 @@ function App() {
       </div>
       <div className="title" onClick={() => localStorage.clear()}>
         24/7 Music Radio
+      </div>
+      <div className="qr">
+        <div>Quét mã QR để ủng hộ</div>
+        <img src={qr_payment} />
       </div>
       <div className="clock">
         <div>{time}</div>
