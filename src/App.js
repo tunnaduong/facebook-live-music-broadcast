@@ -16,6 +16,7 @@ function App() {
   const [playingQueue, setPlayingQueue] = React.useState([]);
   const [currentVideoIndex, setCurrentVideoIndex] = React.useState(0);
   const [player, setPlayer] = React.useState(null);
+  const [skipCalled, setSkipCalled] = React.useState(false);
 
   React.useEffect(() => {
     function showTime() {
@@ -54,7 +55,10 @@ function App() {
 
     showTime();
     // Call getComments every 10 seconds
-    const interval = setInterval(getComments, 1000);
+    const interval = setInterval(() => {
+      getComments();
+      setSkipCalled(false);
+    }, 3000);
     getComments();
     return () => clearInterval(interval);
   }, []);
@@ -245,11 +249,11 @@ function App() {
                 commentObj.comment.trim().toLowerCase() === "/next"
             );
 
-            // Check if the command is `/next`
             if (nextCommand) {
               console.log("Next command found. Skipping to the next song.");
-              skipToNextSong(); // Skip to the next song
-              continue; // Skip the rest of the loop for this iteration
+              console.log("=====================");
+              setSkipCalled(true);
+              skipToNextSong();
             }
 
             console.log("cmtobjj", commentObj);
@@ -312,26 +316,35 @@ function App() {
 
   const skipToNextSong = () => {
     console.log("Skipping to the next song...");
-    setCurrentVideoIndex((prevIndex) => {
-      if (prevIndex < playingQueue.length - 1) {
-        player.playVideo();
+    console.log("playing queue length", playingQueue.length);
+
+    if (currentVideoIndex < playingQueue.length - 1) {
+      setCurrentVideoIndex((prevIndex) => {
+        console.log(`Advancing to next song: ${prevIndex + 1}`);
         return prevIndex + 1;
-      } else {
-        // Optionally, reset or show a message when at the last song
-        return prevIndex;
-      }
-    });
-    toast.info("Bỏ qua bài hát hiện tại!", {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
+      });
+      toast.info("Bỏ qua bài hát hiện tại!", {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "light",
+      });
+    } else {
+      console.log("Already at the last song.");
+    }
   };
+
+  React.useEffect(() => {
+    if (skipCalled) {
+      console.log("----------------Skip called----------------");
+      skipToNextSong();
+      setSkipCalled(false);
+    }
+  }, [skipCalled]);
 
   const onPlayerReady = (event) => {
     // access to player in all event handlers via event.target
