@@ -54,7 +54,7 @@ function App() {
 
     showTime();
     // Call getComments every 10 seconds
-    const interval = setInterval(getComments, 3000);
+    const interval = setInterval(getComments, 1000);
     getComments();
     return () => clearInterval(interval);
   }, []);
@@ -236,6 +236,14 @@ function App() {
           let latestNotFoundKeyword = null; // Variable to store the latest not found keyword
 
           for (const commentObj of ytComments) {
+            const comment = commentObj.comment.trim();
+
+            // Check if the command is `/next`
+            if (comment === "/next") {
+              skipToNextSong(); // Skip to the next song
+              continue; // Skip the rest of the loop for this iteration
+            }
+
             console.log("cmtobjj", commentObj);
             let songName = commentObj.comment.slice(4).trim();
             songName += ""; // Append " remix" to the song name
@@ -253,39 +261,6 @@ function App() {
               console.log(`No video found for song ${songName}`);
               latestNotFoundKeyword = songName; // Store the latest not found keyword
             }
-          }
-
-          // Check for /next command
-          const nextCommand = JSON.parse(
-            localStorage.getItem("comments")
-          )?.find(
-            (commentObj) =>
-              typeof commentObj.comment === "string" &&
-              commentObj.comment.trim().toLowerCase() === "/next"
-          );
-
-          if (nextCommand) {
-            console.log("Next command detected");
-            toast.success(
-              `Đang bỏ qua bài hát hiện tại và chuyển sang bài hát tiếp theo...`,
-              {
-                position: "top-right",
-                autoClose: 5000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-                theme: "light",
-              }
-            );
-            setCurrentVideoIndex((prevIndex) => {
-              if (prevIndex < playingQueue.length - 1) {
-                return prevIndex + 1;
-              } else {
-                return prevIndex;
-              }
-            });
           }
 
           // Show a single toast message for the latest not found keyword
@@ -313,10 +288,40 @@ function App() {
       });
   };
 
+  React.useEffect(() => {
+    console.log("Updated playingQueue:", playingQueue);
+  }, [playingQueue]);
+
+  React.useEffect(() => {
+    console.log("Current video index:", currentVideoIndex);
+  }, [currentVideoIndex]);
+
   const extractTextFromHTML = (html) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
     return doc.body.textContent || "";
+  };
+
+  const skipToNextSong = () => {
+    setCurrentVideoIndex((prevIndex) => {
+      if (prevIndex < playingQueue.length - 1) {
+        player.playVideo();
+        return prevIndex + 1;
+      } else {
+        // Optionally, reset or show a message when at the last song
+        return prevIndex;
+      }
+    });
+    toast.info("Bỏ qua bài hát hiện tại!", {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+    });
   };
 
   const onPlayerReady = (event) => {
