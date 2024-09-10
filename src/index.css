@@ -106,8 +106,6 @@ body {
   font-size: 28px;
   font-weight: 600;
   width: 500px;
-  height: 148px;
-  overflow-y: hidden;
 }
 
 .now-playing {
@@ -174,13 +172,13 @@ body {
   font-size: 35px;
 }
 
-.next-song {
+/* .next-song {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   font-size: 20px;
   font-weight: 400;
-}
+} */
 
 .qr {
   position: absolute;

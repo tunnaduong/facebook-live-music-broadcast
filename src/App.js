@@ -453,24 +453,28 @@ function App() {
       <div className="slider-wrapper">
         <div className="live-cmt">Tiếp theo:</div>
         <div className="slider">
-          {playingQueue.length == 0 ||
-          currentVideoIndex >= playingQueue.length - 1 ? (
-            <div style={{ marginRight: 10 }}>**ĐANG TRỐNG**</div>
-          ) : (
-            <>
-              {playingQueue.slice(currentVideoIndex + 1).map((video, index) => (
-                <>
-                  <div
-                    key={index}
-                    className="next-song"
-                    style={{ marginRight: 10 }}
-                  >
-                    {index + 1}) {video.videoTitle}
-                  </div>
-                </>
-              ))}
-            </>
-          )}
+          <Marquee autoFill={false} speed={80}>
+            {playingQueue.length == 0 ||
+            currentVideoIndex >= playingQueue.length - 1 ? (
+              <div style={{ marginRight: 10 }}>**ĐANG TRỐNG**</div>
+            ) : (
+              <>
+                {playingQueue
+                  .slice(currentVideoIndex + 1)
+                  .map((video, index) => (
+                    <>
+                      <span
+                        key={index}
+                        className="next-song"
+                        style={{ marginRight: 10 }}
+                      >
+                        {index + 1}) {video.videoTitle}
+                      </span>
+                    </>
+                  ))}
+              </>
+            )}
+          </Marquee>
         </div>
       </div>
       <div className="now-playing-wrapper">
