@@ -419,10 +419,10 @@ function App() {
       <div className="title" onClick={() => localStorage.clear()}>
         24/7 Music Radio
       </div>
-      <div className="qr">
-        <div>Quét mã QR để ủng hộ</div>
-        <img src={qr_payment} />
-      </div>
+      // <div className="qr">
+      //   <div>Quét mã QR để ủng hộ</div>
+      //   <img src={qr_payment} />
+      // </div>
       <div className="clock">
         <div>{time}</div>
         <div>
@@ -435,19 +435,19 @@ function App() {
           <div className="link-icon">
             <LogoFacebook color={"#00000"} height="35px" width="35px" />
           </div>
-          <div>/tunna.duong</div>
+          <div>/username</div>
         </div>
         <div className="link">
           <div className="link-icon">
             <LogoYoutube color={"#00000"} height="35px" width="35px" />
           </div>
-          <div>@tunnaduong</div>
+          <div>@username</div>
         </div>
         <div className="link">
           <div className="link-icon">
             <LogoInstagram color={"#00000"} height="35px" width="35px" />
           </div>
-          <div>@tunna.dg</div>
+          <div>@username</div>
         </div>
       </div>
       <div className="slider-wrapper">
