@@ -419,10 +419,6 @@ function App() {
       <div className="title" onClick={() => localStorage.clear()}>
         24/7 Music Radio
       </div>
-      // <div className="qr">
-      //   <div>Quét mã QR để ủng hộ</div>
-      //   <img src={qr_payment} />
-      // </div>
       <div className="clock">
         <div>{time}</div>
         <div>
