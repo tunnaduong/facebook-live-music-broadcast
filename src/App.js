@@ -6,7 +6,6 @@ import Marquee from "react-fast-marquee";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import qr_payment from "./qr-payment.webp";
 
 function App() {
   const [time, setTime] = React.useState("");
@@ -18,74 +17,29 @@ function App() {
   const [player, setPlayer] = React.useState(null);
   const [skipCalled, setSkipCalled] = React.useState(false);
 
-  React.useEffect(() => {
-    function showTime() {
-      var date = new Date();
-      var h = date.getHours(); // 0 - 23
-      var m = date.getMinutes(); // 0 - 59
-      var s = date.getSeconds(); // 0 - 59
-      var session = "AM";
-
-      if (h === 0) {
-        h = 12;
-      }
-
-      if (h >= 12) {
-        // h = h - 12;
-        session = "PM";
-      }
-
-      if (h > 12) {
-        h = h - 12;
-        session = "PM";
-      }
-
-      h = h < 10 ? "0" + h : h;
-      m = m < 10 ? "0" + m : m;
-      s = s < 10 ? "0" + s : s;
-
-      var time = h + ":" + m;
-
-      setTime(time);
-      setSecond(s);
-      setSession(session);
-
-      setTimeout(showTime, 1000);
-    }
-
-    showTime();
-    // Call getComments every 10 seconds
-    const interval = setInterval(() => {
-      getComments();
-      setSkipCalled(false);
-    }, 3000);
-    getComments();
-    return () => clearInterval(interval);
-  }, []);
-
   // let searchCache = {};
 
   // Function to search YouTube API
-  var searchCache = {};
-  const rateLimit = { count: 0, lastReset: Date.now() };
+  const searchCacheRef = React.useRef({});
+  const rateLimitRef = React.useRef({ count: 0, lastReset: Date.now() });
   const RATE_LIMIT_MAX = 100; // Max number of requests
   const RATE_LIMIT_INTERVAL = 1000 * 60 * 60 * 24; // 24 hours
 
   // Function to search YouTube API
-  const searchYouTube = async (query) => {
-    if (searchCache[query]) {
+  const searchYouTube = React.useCallback(async (query) => {
+    if (searchCacheRef.current[query]) {
       console.log(`Cache hit for query: ${query}`);
-      return searchCache[query];
+      return searchCacheRef.current[query];
     }
 
     // Rate limiting
     const now = Date.now();
-    if (now - rateLimit.lastReset > RATE_LIMIT_INTERVAL) {
-      rateLimit.count = 0;
-      rateLimit.lastReset = now;
+    if (now - rateLimitRef.current.lastReset > RATE_LIMIT_INTERVAL) {
+      rateLimitRef.current.count = 0;
+      rateLimitRef.current.lastReset = now;
     }
 
-    if (rateLimit.count >= RATE_LIMIT_MAX) {
+    if (rateLimitRef.current.count >= RATE_LIMIT_MAX) {
       console.error("Rate limit exceeded. Please try again later.");
       return null;
     }
@@ -126,7 +80,7 @@ function App() {
 
       if (
         detailsResponse.data.error ||
-        detailsResponse.data.error == "401 Unauthorized"
+        detailsResponse.data.error === "401 Unauthorized"
       ) {
         toast.error(
           `Bài hát bạn yêu cầu không cho phép nhúng! Hãy chọn bài hát khác.`,
@@ -171,8 +125,8 @@ function App() {
       // }
 
       const videoData = { videoId, videoTitle };
-      searchCache[query] = videoData; // Store the result in the cache
-      rateLimit.count++; // Increment rate limit count
+      searchCacheRef.current[query] = videoData; // Store the result in the cache
+      rateLimitRef.current.count++; // Increment rate limit count
       return videoData;
     } catch (error) {
       if (error.response && error.response.status === 403) {
@@ -182,11 +136,11 @@ function App() {
       }
       return null;
     }
-  };
+  }, [RATE_LIMIT_INTERVAL, RATE_LIMIT_MAX]);
 
-  let addedVideoIds = new Set();
+  const addedVideoIds = React.useRef(new Set());
 
-  const addToQueue = (videoData) => {
+  const addToQueue = React.useCallback((videoData) => {
     setPlayingQueue((prevQueue) => {
       if (!prevQueue.some((video) => video.videoId === videoData.videoId)) {
         console.log(`Added video ID ${videoData.videoId} to the playing queue`);
@@ -208,9 +162,9 @@ function App() {
         return prevQueue;
       }
     });
-  };
+  }, []);
 
-  const getComments = () => {
+  const getComments = React.useCallback(() => {
     axios
       .get("https://tunnaduong.com/test_api/fb_live_chat.php")
       .then(async (response) => {
@@ -253,7 +207,6 @@ function App() {
               console.log("Next command found. Skipping to the next song.");
               console.log("=====================");
               setSkipCalled(true);
-              skipToNextSong();
             }
 
             console.log("cmtobjj", commentObj);
@@ -265,9 +218,9 @@ function App() {
               console.log(
                 `Found video ID ${videoData.videoId} for song ${songName}`
               );
-              if (!addedVideoIds.has(videoData.videoId)) {
+              if (!addedVideoIds.current.has(videoData.videoId)) {
                 addToQueue(videoData);
-                addedVideoIds.add(videoData.videoId);
+                addedVideoIds.current.add(videoData.videoId);
               }
             } else {
               console.log(`No video found for song ${songName}`);
@@ -298,7 +251,51 @@ function App() {
       .catch((error) => {
         console.error("Error fetching comments:", error);
       });
-  };
+  }, [addToQueue, searchYouTube]);
+
+  React.useEffect(() => {
+    function showTime() {
+      var date = new Date();
+      var h = date.getHours(); // 0 - 23
+      var m = date.getMinutes(); // 0 - 59
+      var s = date.getSeconds(); // 0 - 59
+      var session = "AM";
+
+      if (h === 0) {
+        h = 12;
+      }
+
+      if (h >= 12) {
+        // h = h - 12;
+        session = "PM";
+      }
+
+      if (h > 12) {
+        h = h - 12;
+        session = "PM";
+      }
+
+      h = h < 10 ? "0" + h : h;
+      m = m < 10 ? "0" + m : m;
+      s = s < 10 ? "0" + s : s;
+
+      var time = h + ":" + m;
+
+      setTime(time);
+      setSecond(s);
+      setSession(session);
+
+      setTimeout(showTime, 1000);
+    }
+
+    showTime();
+    const interval = setInterval(() => {
+      getComments();
+      setSkipCalled(false);
+    }, 3000);
+    getComments();
+    return () => clearInterval(interval);
+  }, [getComments]);
 
   React.useEffect(() => {
     console.log("Updated playingQueue:", playingQueue);
@@ -314,7 +311,7 @@ function App() {
     return doc.body.textContent || "";
   };
 
-  const skipToNextSong = () => {
+  const skipToNextSong = React.useCallback(() => {
     console.log("Skipping to the next song...");
     console.log("playing queue length", playingQueue.length);
 
@@ -336,7 +333,7 @@ function App() {
     } else {
       console.log("Already at the last song.");
     }
-  };
+  }, [currentVideoIndex, playingQueue.length]);
 
   React.useEffect(() => {
     if (skipCalled) {
@@ -344,7 +341,7 @@ function App() {
       skipToNextSong();
       setSkipCalled(false);
     }
-  }, [skipCalled]);
+  }, [skipCalled, skipToNextSong]);
 
   const onPlayerReady = (event) => {
     // access to player in all event handlers via event.target
@@ -450,7 +447,7 @@ function App() {
         <div className="live-cmt">Tiếp theo:</div>
         <div className="slider">
           <Marquee autoFill={false} speed={80}>
-            {playingQueue.length == 0 ||
+            {playingQueue.length === 0 ||
             currentVideoIndex >= playingQueue.length - 1 ? (
               <div style={{ marginRight: 10 }}>**ĐANG TRỐNG**</div>
             ) : (
@@ -477,7 +474,7 @@ function App() {
         <div className="live-cmt">Đang phát:</div>
         <div className="now-playing">
           <Marquee autoFill={false} speed={80}>
-            {videoTitle == "" ? (
+            {videoTitle === "" ? (
               <div style={{ marginRight: 10 }}>**ĐANG TRỐNG**</div>
             ) : (
               <div style={{ marginRight: 10 }}>{videoTitle}</div>
