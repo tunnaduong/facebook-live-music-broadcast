@@ -31,9 +31,16 @@ Viewers can comment:
 
 Make sure you have:
 
-- **Node.js** (recommended: latest LTS)
+- **Node.js 16 or newer** (recommended: Node.js 18 LTS or newer)
 - **npm**
 - A **YouTube Data API key**
+
+If you do not have a YouTube API key yet:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create/select a project
+3. Enable **YouTube Data API v3**
+4. Create an API key in **APIs & Services → Credentials**
 
 ## Quick start (for beginners)
 
@@ -86,6 +93,7 @@ npm run build   # create production build
 
 - The app currently reads comments from:  
   `https://tunnaduong.com/test_api/fb_live_chat.php`
+- To use your own comment source, edit the URL inside `getComments()` in `src/App.js`.
 - Social handles in the UI are placeholders (`/username`, `@username`).
 - Some UI text is in Vietnamese.
 
