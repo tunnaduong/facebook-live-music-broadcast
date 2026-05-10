@@ -1,70 +1,132 @@
-# Getting Started with Create React App
+# Facebook Live Music Broadcast
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A simple React app that helps you run a **24/7 music livestream** with a song request queue from Facebook Live comments.
 
-## Available Scripts
+## What this project does
 
-In the project directory, you can run:
+This app:
 
-### `npm start`
+- Plays YouTube videos in a queue
+- Reads comments from a Facebook Live comments API
+- Accepts music requests with a command format
+- Lets viewers skip the current song with a command
+- Shows now playing, next songs, and recent comments on screen
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## How viewers control music
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Viewers can comment:
 
-### `npm test`
+- `/yt song name` → request a song (example: `/yt shape of you`)
+- `/next` → skip the current song
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Tech stack
 
-### `npm run build`
+- React (Create React App)
+- Axios
+- react-youtube
+- react-fast-marquee
+- react-toastify
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Before you start
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Make sure you have:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- **Node.js** (recommended: latest LTS)
+- **npm**
+- A **YouTube Data API key**
 
-### `npm run eject`
+## Quick start (for beginners)
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### 1) Clone and open the project
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+git clone <your-repo-url>
+cd facebook-live-music-broadcast
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### 2) Install dependencies
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```bash
+npm install
+```
 
-## Learn More
+### 3) Create environment file
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Create a file named `.env` in the root folder and add:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```env
+REACT_APP_TOKEN=YOUR_YOUTUBE_API_KEY
+```
 
-### Code Splitting
+You can copy from the example file:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+cp .env.example .env
+```
 
-### Analyzing the Bundle Size
+Then replace `YOUR_YOUTUBE_API_KEY` with your real key.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### 4) Start the app
 
-### Making a Progressive Web App
+```bash
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Open: [http://localhost:3000](http://localhost:3000)
 
-### Advanced Configuration
+## Available commands
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+```bash
+npm start       # run in development mode
+npm test        # run test suite
+npm run build   # create production build
+```
 
-### Deployment
+## Important project notes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- The app currently reads comments from:  
+  `https://tunnaduong.com/test_api/fb_live_chat.php`
+- Social handles in the UI are placeholders (`/username`, `@username`).
+- Some UI text is in Vietnamese.
 
-### `npm run build` fails to minify
+## Basic customization
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+If you are new, these are the easiest first edits:
+
+1. Change social usernames in `src/App.js`
+2. Update on-screen text to your language
+3. Style the interface in `src/App.css`
+
+## Troubleshooting
+
+### App does not load songs
+
+- Check that `.env` exists
+- Check `REACT_APP_TOKEN` is valid
+- Restart the app after editing `.env`
+
+### Song request is not added
+
+- Use correct format: `/yt song name`
+- Some YouTube videos cannot be embedded
+- API quota limits can block requests
+
+### Comments are not updating
+
+- Confirm your comment API endpoint is reachable
+- Check browser console logs for request errors
+
+## Project structure
+
+```text
+.
+├── public/
+├── src/
+│   ├── App.js
+│   ├── App.css
+│   ├── utils.js
+│   └── ...
+├── .env.example
+├── package.json
+└── README.md
+```
